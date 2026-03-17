@@ -1,0 +1,16 @@
+[package]
+name = "windows_bluetooth_watcher"
+version = "0.1.0"
+edition = "2024"
+homepage = "https://github.com/starwindv/windows-bluetooth-watcher.git"
+
+[dependencies]
+pyo3 = { version = "0.28.2", features = ["experimental-async"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+serde_yaml = "0.9.34"
+tokio = { version = "1.50.0", features = [
+    "time",
+    "rt-multi-thread",
+    "macros"] }
+windows = { version = "0.62.2", features = ["Devices_Bluetooth", "Devices_Bluetooth_Rfcomm", "Devices_Bluetooth_Advertisement", "Devices_Bluetooth_Background", "Devices_Bluetooth_GenericAttributeProfile", "Wdk_Devices_Bluetooth", "Win32_Devices_Bluetooth", "Foundation", "Foundation_Collections", "Devices_Enumeration", "Gaming", "Gaming_Input", "System"] }

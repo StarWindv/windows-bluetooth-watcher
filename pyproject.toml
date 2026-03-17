@@ -1,0 +1,22 @@
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "windows_bluetooth_watcher"
+urls = { "Homepage" = "https://github.com/starwindv/windows-bluetooth-watcher.git" }
+authors = [
+    { name="星灿长风v(StarWindv)", email="starwindv.stv@gmail.com" }
+]
+dynamic = ["version"]
+requires-python = ">=3.10"
+# readme = "./readme.md"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython"
+]
+license = "GPL-3.0-only"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "."
