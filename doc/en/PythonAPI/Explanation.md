@@ -30,7 +30,7 @@ Note: The document version number follows the project version updates.
                 - [2.2.1.2 Type](#2212-type)
                 - [2.2.1.3 Return Value](#2213-return-value)
                 - [2.2.1.4 Example](#2214-example)
-            - [2.2.2 get\_all\_notifications](#222-get_all_notifications)
+            - [2.2.2 get\_all](#222-get_all)
                 - [2.2.2.1 Parameters](#2221-parameters)
                 - [2.2.2.2 Type](#2222-type)
                 - [2.2.2.3 Return Value](#2223-return-value)
@@ -146,7 +146,7 @@ The library provides the following classes:
 This class provides the following interfaces:
 
 - [`request_permission`](#221-request_permission)
-- [`get_all_notifications`](#222-get_all_notifications)
+- [`get_all`](#222-get_all)
 
 ---
 
@@ -189,7 +189,7 @@ asyncio.run(main())
 
 ---
 
-#### 2.2.2 get_all_notifications
+#### 2.2.2 get_all
 
 ##### 2.2.2.1 Parameters
 
@@ -217,7 +217,7 @@ async def main():
     status = await listener.request_permission()
     match status:
         case x if x != "Allowed": return
-    devices = await listener.get_all_notifications()
+    devices = await listener.get_all()
     for device in devices:
         print(wbw.DiffTool.serialize_to(device, wbw.SerializeFormat.Json))
 
@@ -233,7 +233,7 @@ asyncio.run(main())
 `Device` is the core data structure in this library representing a single Bluetooth device.  
 It contains most metadata fields of Bluetooth devices; some information (such as battery level) cannot be uniformly obtained due to different device APIs.
 
-This class is implemented in Rust and exported to Python via PyO3. It does not support instantiation and is typically returned by `Listener.get_all_notifications()`.
+This class is implemented in Rust and exported to Python via PyO3. It does not support instantiation and is typically returned by `Listener.get_all()`.
 
 ---
 

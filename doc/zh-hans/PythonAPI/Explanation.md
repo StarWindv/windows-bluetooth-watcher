@@ -30,7 +30,7 @@
         - [2.2.1.2 类型](#2212-类型)
         - [2.2.1.3 返回值](#2213-返回值)
         - [2.2.1.4 示例](#2214-示例)
-      - [2.2.2 get\_all\_notifications](#222-get_all_notifications)
+      - [2.2.2 get\_all](#222-get_all)
         - [2.2.2.1 参数](#2221-参数)
         - [2.2.2.2 类型](#2222-类型)
         - [2.2.2.3 返回值](#2223-返回值)
@@ -146,7 +146,7 @@ import windows_bluetooth_watcher as wbw
 此类提供如下接口(可点击):
 
 - [`request_permission`](#221-request_permission)
-- [`get_all_notifications`](#222-get_all_notifications)
+- [`get_all`](#222-get_all)
 
 ---
 
@@ -189,7 +189,7 @@ asyncio.run(main())
 
 ---
 
-#### 2.2.2 get_all_notifications
+#### 2.2.2 get_all
 
 ##### 2.2.2.1 参数
 
@@ -217,7 +217,7 @@ async def main():
     status = await listener.request_permission()
     match status:
         case x if x != "Allowed": return
-    devices = await listener.get_all_notifications()
+    devices = await listener.get_all()
     for device in devices:
         print(wbw.DiffTool.serialize_to(device, wbw.SerializeFormat.Json))
 
