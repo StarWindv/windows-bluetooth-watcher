@@ -65,20 +65,20 @@ impl DiffTool {
     }
 
     #[staticmethod]
-    pub fn to_json_str(notifications: Vec<Device>) -> Result<String, PyErr> {
+    pub fn to_json_str(devices: Vec<Device>) -> Result<String, PyErr> {
         #![allow(clippy::wrong_self_convention)]
-        DiffTool::serialize_to(notifications, SerializeFormat::Json)
+        DiffTool::serialize_to(devices, SerializeFormat::Json)
     }
 
     #[staticmethod]
-    pub fn serialize_to(notifications: Vec<Device>, to: SerializeFormat) -> Result<String, PyErr> {
+    pub fn serialize_to(devices: Vec<Device>, to: SerializeFormat) -> Result<String, PyErr> {
         match to {
             SerializeFormat::Json => {
-                Ok(serde_json::to_string_pretty(&notifications)
+                Ok(serde_json::to_string_pretty(&devices)
                     .unwrap_or_else(|_| "[]".to_string()))
             }
             SerializeFormat::Yaml => {
-                Ok(serde_yaml::to_string(&notifications).unwrap_or_else(|_| "[]".to_string()))
+                Ok(serde_yaml::to_string(&devices).unwrap_or_else(|_| "[]".to_string()))
             }
         }
     }

@@ -13,8 +13,8 @@ impl Diff {
     }
 
     pub fn __str__(&self) -> String {
-        let connected_json = DiffTool::to_json_str(&*self.connected);
-        let disconnected_json = DiffTool::to_json_str(&*self.disconnected);
+        let connected_json = DiffTool::to_json_str((&*self.connected).to_vec());
+        let disconnected_json = DiffTool::to_json_str((&*self.disconnected).to_vec());
 
         format!(
             "{{\n  \"connected\": {:?},\n  \"disconnected\": {:?}\n}}",

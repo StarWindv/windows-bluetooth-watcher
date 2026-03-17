@@ -1,19 +1,19 @@
-use std::collections::HashMap;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex, OnceLock};
-
 use crate::modules::types::{
     diff_tool::DiffTool, events::features::callback_token::CallbackToken,
     events::features::events_type::EventsType, events::features::polling_eventify::Polling,
     events::features::polling_status::PollingStatus, listener::Listener, device::Device,
 };
+use crate::modules::error::ConvertToPyErr;
+
+use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 
 use pyo3::{
     Bound, Py, PyAny, PyErr, PyResult, Python, exceptions::PyTypeError, pymethods,
     types::PyAnyMethods,
 };
 
-use crate::modules::error::ConvertToPyErr;
 use tokio::{
     runtime::Runtime,
     time::{Duration, sleep},
