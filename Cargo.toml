@@ -2,7 +2,9 @@
 name = "windows_bluetooth_watcher"
 version = "0.1.0"
 edition = "2024"
-homepage = "https://github.com/starwindv/windows-bluetooth-watcher.git"
+license = "GPL-3"
+homepage = "https://github.com/starwindv/windows-notice-lite.git"
+description = "This project is a secondary development based on the windows crate. It primarily wraps related methods for obtaining the connection status of Bluetooth devices on the Windows system and uses PyO3 for Python bindings to provide it as a Python library."
 
 [dependencies]
 pyo3 = { version = "0.28.2", features = ["experimental-async"] }
