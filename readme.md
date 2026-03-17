@@ -75,7 +75,7 @@ python -m pip install {path_to_wheel}
 
 ## III. Documentation
 
-You can generate the documentation using `cargo doc` in the project's root directory, or check our curated [detailed documentation](https://github.com/starwindv/windows-bluetooth-watcher/blob/main/doc/en-us) (Note: Original link points to zh-hans, adjust if en-us exists, otherwise keep as is or link to main doc).
+You can generate the documentation using `cargo doc` in the project's root directory, or check our curated [detailed documentation](https://github.com/starwindv/windows-bluetooth-watcher/blob/main/doc/en)
 
 ---
 
