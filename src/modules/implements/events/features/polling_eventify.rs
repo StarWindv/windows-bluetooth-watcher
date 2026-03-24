@@ -13,13 +13,23 @@ use pyo3::{
     Bound, Py, PyAny, PyErr, PyResult, Python, exceptions::PyTypeError, pymethods,
     types::PyAnyMethods,
 };
-
+use pyo3::exceptions::PyRuntimeError;
+use serde::Serialize;
+use serde_json::to_string_pretty;
 use tokio::{
     runtime::Runtime,
     time::{Duration, sleep},
 };
 
 static RUNTIME: OnceLock<Runtime> = OnceLock::new();
+
+#[derive(Debug, Clone, Serialize)]
+struct _DTOForRegistry {
+    handler: String,
+    events_type: EventsType,
+    is_active: bool,
+    comment: String,
+}
 
 #[pymethods]
 impl Polling {
@@ -44,15 +54,15 @@ impl Polling {
         })
     }
 
-    /// 注册一个全局轮询事件回调函数, 该回调会接收所有类型的事件. 
+    /// 注册一个全局轮询事件回调函数, 该回调会接收所有类型的事件.
     ///
     /// Args:
     ///
-    ///     handler (Callable): 一个可调用对象, 接收一个 Diff 参数. 
+    ///     handler (Callable): 一个可调用对象, 接收一个 Diff 参数.
     ///
     /// Returns:
     ///
-    ///     CallbackToken: 用于后续取消注册的令牌. 
+    ///     CallbackToken: 用于后续取消注册的令牌.
     ///
     /// Raises:
     ///
@@ -61,15 +71,27 @@ impl Polling {
         &self,
         handler: Bound<'_, PyAny>,
     ) -> PyResult<CallbackToken> {
+        let token: String = "[WNL PlaceHolder] NO COMMENT".to_string();
+        (&*self).register_with_comment(handler, token)
+    }
+
+    pub fn register_with_comment(
+        &self,
+        handler: Bound<'_, PyAny>,
+        comment: String,
+    ) -> PyResult<CallbackToken> {
         if !handler.is_callable() {
             return Err(PyErr::new::<PyTypeError, _>(
                 "[WNL Error] Handler must be callable",
             ));
         }
-        let token = CallbackToken::new();
-        let py_handler = handler.unbind();
-        let mut reg = self.registry.lock().auto()?;
-        reg.insert(token.clone(), (py_handler, EventsType::All, true));
+        let token: CallbackToken = CallbackToken::new();
+        let py_handler: Py<PyAny> = handler.unbind();
+        let mut reg = (&*self.registry).lock().auto()?;
+        (&mut *reg).insert(
+            (&token).clone(),
+            (py_handler, EventsType::All, true, comment),
+        );
         Ok(token)
     }
 
@@ -118,17 +140,25 @@ impl Polling {
         let token = CallbackToken::new();
         let py_handler = handler.unbind();
         let mut reg = self.registry.lock().auto()?;
-        reg.insert(token.clone(), (py_handler, for_type, true));
+        reg.insert(
+            token.clone(),
+            (
+                py_handler,
+                for_type,
+                true,
+                "[WNL PlaceHolder] NO COMMENT".to_string(),
+            ),
+        );
         Ok(token)
     }
 
     /// 启动事件循环, 并将可能的回调函数投入任务中
     ///
-    /// 如果轮询已经在运行, 则立即返回 Success. 
+    /// 如果轮询已经在运行, 则立即返回 Success.
     ///
     /// Returns:
     ///
-    ///     PollingStatus: 返回 Success. 
+    ///     PollingStatus: 返回 Success.
     pub fn start_all(&self) -> PyResult<PollingStatus> {
         if self.running.load(Ordering::SeqCst) {
             return Ok(PollingStatus::Success);
@@ -158,18 +188,18 @@ impl Polling {
         Ok(PollingStatus::Success)
     }
 
-    /// 激活指定令牌的回调函数, 使其开始处理事件. 
+    /// 激活指定令牌的回调函数, 使其开始处理事件.
     ///
     /// Args:
     ///
-    ///     token (CallbackToken): 要激活的回调令牌. 
+    ///     token (CallbackToken): 要激活的回调令牌.
     ///
     /// Returns:
     ///
-    ///     PollingStatus: 如果找到该令牌则返回 Success, 否则返回 Failed. 
+    ///     PollingStatus: 如果找到该令牌则返回 Success, 否则返回 Failed.
     pub fn polling_for(&self, token: CallbackToken) -> PyResult<PollingStatus> {
         let mut reg = self.registry.lock().auto()?;
-        if let Some((_, _, active)) = reg.get_mut(&token) {
+        if let Some((_, _, active, _)) = reg.get_mut(&token) {
             *active = true;
             Ok(PollingStatus::Success)
         } else {
@@ -177,18 +207,18 @@ impl Polling {
         }
     }
 
-    /// 停止指定令牌的回调函数, 使其不再处理事件. 
+    /// 停止指定令牌的回调函数, 使其不再处理事件.
     ///
     /// Args:
     ///
-    ///     token (CallbackToken): 要暂停的回调令牌. 
+    ///     token (CallbackToken): 要暂停的回调令牌.
     ///
     /// Returns:
     ///
-    ///     PollingStatus: 如果找到该令牌则返回 Success, 否则返回 Failed. 
+    ///     PollingStatus: 如果找到该令牌则返回 Success, 否则返回 Failed.
     pub fn stop_for(&self, token: CallbackToken) -> PyResult<PollingStatus> {
         let mut reg = self.registry.lock().auto()?;
-        if let Some((_, _, active)) = reg.get_mut(&token) {
+        if let Some((_, _, active, _)) = reg.get_mut(&token) {
             *active = false;
             Ok(PollingStatus::Success)
         } else {
@@ -205,12 +235,64 @@ impl Polling {
         self.interval = interval;
         *self.interval_shared.lock().unwrap() = interval;
     }
+
+    pub fn change_comment(&self, token: CallbackToken, new_comment: String) -> Result<bool, PyErr> {
+        let mut registry = (&*self.registry).lock().map_err(|e| {
+            PyRuntimeError::new_err(format!("[WNL Error] Failed to lock registry: {:?}", e))
+        })?;
+
+        let mut status: bool = false;
+
+        if let Some(entry) = (&mut *registry).get_mut(&token) {
+            entry.3 = new_comment;
+            status = true;
+        }
+
+        Ok(status)
+    }
+
+    /// 返回当前注册表的内容字符串
+    ///
+    /// Returns:
+    /// ```json
+    /// {
+    ///     "CallbackToken(x)": {
+    ///         "handler": "Py(0x..abcdefg)",
+    ///         "events_type": "All/New/Remove",
+    ///         "is_active": bool
+    ///     }, ...
+    /// }
+    /// ```
+    pub fn show_registry(&self) -> Result<String, PyErr> {
+        let guard = self.registry.lock().map_err(|e| {
+            PyRuntimeError::new_err(format!("[WNL Error] Failed to lock registry: {:?}", e))
+        })?;
+
+        let serializable_registry: HashMap<String, _DTOForRegistry> = (&*guard)
+            .iter()
+            .map(|(token, (py_obj, events_type, flag, comment))| {
+                let py_debug_str: Option<String> =
+                    Python::try_attach(|_| format!("{:?}", (&*py_obj).as_ref()));
+                return (
+                    // 其实没有改变什么, 只是这里直接加 return 更清晰一些
+                    (&*token).__str__(),
+                    _DTOForRegistry {
+                        handler: py_debug_str.unwrap(),
+                        events_type: (&*events_type).clone(),
+                        is_active: *flag,
+                        comment: (&*comment).clone(),
+                    },
+                );
+            })
+            .collect();
+        Ok(to_string_pretty(&serializable_registry).unwrap())
+    }
 }
 
 impl Polling {
     async fn run_polling(
         listener: Listener,
-        registry: Arc<Mutex<HashMap<CallbackToken, (Py<PyAny>, EventsType, bool)>>>,
+        registry: Arc<Mutex<HashMap<CallbackToken, (Py<PyAny>, EventsType, bool, String)>>>,
         running: Arc<AtomicBool>,
         interval_shared: Arc<Mutex<i32>>,
     ) {
@@ -244,7 +326,7 @@ impl Polling {
 
                 let handlers_to_call = guard
                     .iter()
-                    .filter_map(|(_, (h, e_type, active))| {
+                    .filter_map(|(_, (h, e_type, active, _))| {
                         if !*active {
                             return None;
                         }

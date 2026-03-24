@@ -21,4 +21,8 @@ impl Diff {
             connected_json, disconnected_json
         )
     }
+
+    pub fn __repr__(&self) -> String {
+        self.__str__()
+    }
 }

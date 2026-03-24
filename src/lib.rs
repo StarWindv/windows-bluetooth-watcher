@@ -8,6 +8,12 @@ use pyo3::{Bound, PyResult, Python, pymodule};
 fn windows_bluetooth_watcher(_py: Python<'_>, m: &Bound<'_, PyModule>) -> PyResult<()> {
     let m_features = PyModule::new(_py, "features")?;
 
+    m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+    m.add("__description__", env!("CARGO_PKG_DESCRIPTION"))?;
+    m.add("__home__", env!("CARGO_PKG_HOMEPAGE"))?;
+    m.add("__license__", env!("CARGO_PKG_LICENSE"))?;
+    m.add("__author__", env!("CARGO_PKG_AUTHORS"))?;
+
     m.add_class::<types::listener::Listener>()?;
     m.add_class::<types::device::Device>()?;
     m.add_class::<types::diff::Diff>()?;
